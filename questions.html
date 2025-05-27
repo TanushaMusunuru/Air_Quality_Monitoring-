@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQI Health Assessment</title>
+    <style>
+        :root {
+            --primary: #2c5f2d;
+            --danger: #d9534f;
+            --warning: #f0ad4e;
+            --success: #5cb85c;
+            --dark: #333333;
+            --light: rgba(255, 255, 255, 0.9);
+            --gray: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+        body {
+            background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 35px;
+            border-radius: 0 0 15px 15px;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 5px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .quiz-container {
+            background: var(--light);
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            border: 1px solid rgba(44, 95, 45, 0.3);
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 26px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--gray);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 5px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--success);
+        }
+
+        .option-card {
+            border: 1px solid var(--gray);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .option-card:hover {
+            border-color: var(--primary);
+            background-color: rgba(44, 95, 45, 0.05);
+            transform: none;
+        }
+
+        .option-card.selected {
+            border-color: var(--success);
+            background-color: rgba(92, 184, 92, 0.1);
+        }
+
+        .option-card input {
+            margin-right: 12px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button.next {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        button.prev {
+            background-color: var(--gray);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-container {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .results-container.visible {
+            display: block;
+        }
+
+        .alert {
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .alert-danger {
+            border-left: 5px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-warning {
+            border-left: 5px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .alert-success {
+            border-left: 5px solid var(--success);
+            color: var(--success);
+        }
+
+        .aqi-indicator {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .aqi-value {
+            font-size: 52px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .aqi-label {
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .recommendations {
+            margin-top: 35px;
+        }
+
+        .recommendation-item {
+            margin-bottom: 18px;
+            padding-left: 35px;
+            position: relative;
+            color: var(--dark);
+        }
+
+        .recommendation-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 25px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">AQI Health Assessment</div>
+            <div id="headerStatus">Step 1 of 6</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="quiz-container">
+            <!-- Step 1: Location -->
+            <div class="step active" id="step1">
+                <h2>Where Are You?</h2>
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" placeholder="Enter your city">
+                </div>
+                <div class="form-group">
+                    <label for="residential">Residential Area Type</label>
+                    <select id="residential">
+                        <option value="">Select your area type</option>
+                        <option value="urban">Urban (City Center)</option>
+                        <option value="suburban">Suburban</option>
+                        <option value="rural">Rural</option>
+                        <option value="industrial">Near Industrial Zone</option>
+                    </select>
+                </div>
+                <div class="button-container">
+                    <div></div>
+                    <button class="next" id="step1Next">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Health Conditions -->
+            <div class="step" id="step2">
+                <h2>Your Health</h2>
+                <div class="form-group">
+                    <label>Any of these conditions? (Select all that apply)</label>
+                    <div class="option-card" data-value="asthma" data-multi="true">
+                        <input type="checkbox" name="conditions" value="asthma"> Asthma
+                    </div>
+                    <div class="option-card" data-value="allergies" data-multi="true">
+                        <input type="checkbox" name="conditions" value="allergies"> Allergies
+                    </div>
+                    <div class="option-card" data-value="copd" data-multi="true">
+                        <input type="checkbox" name="conditions" value="copd"> COPD
+                    </div>
+                    <div class="option-card" data-value="heart" data-multi="true">
+                        <input type="checkbox" name="conditions" value="heart"> Heart Disease
+                    </div>
+                    <div class="option-card" data-value="none" data-multi="true">
+                        <input type="checkbox" name="conditions" value="none"> None of these
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="prev" id="step2Prev">Previous</button>
+                    <button class="next" id="step2Next">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Gender and Children -->
+            <div class="step" id="step3">
+                <h2>Personal Information</h2>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <div class="option-card" data-value="male">
+                        <input type="radio" name="gender" value="male"> Male
+                    </div>
+                    <div class="option-card" data-value="female">
+                        <input type="radio" name="gender" value="female"> Female
+                    </div>
+                    <div class="option-card" data-value="other">
+                        <input type="radio" name="gender" value="other"> Other
+                    </div>
+                </div>
+
+                <!-- Female-specific questions -->
+                <div id="femaleQuestions" style="display: none;">
+                    <div class="form-group">
+                        <label>Are you pregnant?</label>
+                        <div class="option-card" data-value="yes">
+                            <input type="radio" name="pregnant" value="yes"> Yes
+                        </div>
+                        <div class="option-card" data-value="no">
+                            <input type="radio" name="pregnant" value="no"> No
+                        </div>
+                    </div>
+                    <div class="form-group" id="pregnancyTrimester" style="display: none;">
+                        <label>Which trimester?</label>
+                        <div class="option-card" data-value="first">
+                            <input type="radio" name="trimester" value="first"> First
+                        </div>
+                        <div class="option-card" data-value="second">
+                            <input type="radio" name="trimester" value="second"> Second
+                        </div>
+                        <div class="option-card" data-value="third">
+                            <input type="radio" name="trimester" value="third"> Third
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Do you have children under 5?</label>
+                    <div class="option-card" data-value="yes">
+                        <input type="radio" name="youngChildren" value="yes"> Yes
+                    </div>
+                    <div class="option-card" data-value="no">
+                        <input type="radio" name="youngChildren" value="no"> No
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="prev" id="step3Prev">Previous</button>
+                    <button class="next" id="step3Next">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Lifestyle -->
+            <div class="step" id="step4">
+                <h2>Your Lifestyle</h2>
+                <div class="form-group">
+                    <label>Daily time spent outdoors</label>
+                    <div class="option-card" data-value="minimal">
+                        <input type="radio" name="outdoorTime" value="minimal"> Less than 1 hour
+                    </div>
+                    <div class="option-card" data-value="moderate">
+                        <input type="radio" name="outdoorTime" value="moderate"> 1-3 hours
+                    </div>
+                    <div class="option-card" data-value="significant">
+                        <input type="radio" name="outdoorTime" value="significant"> More than 3 hours
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Do you exercise outdoors?</label>
+                    <div class="option-card" data-value="regular">
+                        <input type="radio" name="outdoorExercise" value="regular"> Regularly
+                    </div>
+                    <div class="option-card" data-value="sometimes">
+                        <input type="radio" name="outdoorExercise" value="sometimes"> Sometimes
+                    </div>
+                    <div class="option-card" data-value="no">
+                        <input type="radio" name="outdoorExercise" value="no"> No
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="prev" id="step4Prev">Previous</button>
+                    <button class="next" id="step4Next">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Home Environment -->
+            <div class="step" id="step5">
+                <h2>Your Home Environment</h2>
+                <div class="form-group">
+                    <label>Do you use air purifiers?</label>
+                    <div class="option-card" data-value="yes">
+                        <input type="radio" name="airPurifier" value="yes"> Yes
+                    </div>
+                    <div class="option-card" data-value="no">
+                        <input type="radio" name="airPurifier" value="no"> No
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Is your home near a major road?</label>
+                    <div class="option-card" data-value="yes">
+                        <input type="radio" name="nearRoad" value="yes"> Yes
+                    </div>
+                    <div class="option-card" data-value="no">
+                        <input type="radio" name="nearRoad" value="no"> No
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Does your home have good ventilation?</label>
+                    <div class="option-card" data-value="yes">
+                        <input type="radio" name="ventilation" value="yes"> Yes
+                    </div>
+                    <div class="option-card" data-value="no">
+                        <input type="radio" name="ventilation" value="no"> No
+                    </div>
+                    <div class="option-card" data-value="unsure">
+                        <input type="radio" name="ventilation" value="unsure"> Not sure
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="prev" id="step5Prev">Previous</button>
+                    <button class="next" id="step5Next">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Symptoms -->
+            <div class="step" id="step6">
+                <h2>Recent Symptoms</h2>
+                <div class="form-group">
+                    <label>Have you experienced any of these recently? (Select all that apply)</label>
+                    <div class="option-card" data-value="cough" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="cough"> Persistent coughing
+                    </div>
+                    <div class="option-card" data-value="irritation" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="irritation"> Eye or throat irritation
+                    </div>
+                    <div class="option-card" data-value="breathing" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="breathing"> Difficulty breathing
+                    </div>
+                    <div class="option-card" data-value="headache" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="headache"> Frequent headaches
+                    </div>
+                    <div class="option-card" data-value="fatigue" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="fatigue"> Unusual fatigue
+                    </div>
+                    <div class="option-card" data-value="none" data-multi="true">
+                        <input type="checkbox" name="symptoms" value="none"> None of these
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button class="prev" id="step6Prev">Previous</button>
+                    <button class="next" id="submitBtn">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container" id="results">
+            <div class="quiz-container">
+                <h2>Your AQI Risk Assessment</h2>
+                <div id="alertContainer"></div>
+                <div class="aqi-indicator">
+                    <div>Your AQI Risk Level</div>
+                    <div class="aqi-value" id="aqiValue">0</div>
+                    <div class="aqi-label" id="aqiLabel">Processing...</div>
+                </div>
+                <div class="recommendations">
+                    <h3>Personalized Recommendations</h3>
+                    <div id="recommendationsContainer"></div>
+                </div>
+                <div class="button-container" style="margin-top: 40px;">
+                    <button class="prev" id="restartBtn">Start Over</button>
+                    <button class="ne   xt" id="loginBtn">Go to Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentStep = 1;
+            const totalSteps = 6;
+            const userData = { conditions: [], symptoms: [] };
+
+            const progressBar = document.getElementById('progressBar');
+            const headerStatus = document.getElementById('headerStatus');
+
+            updateProgress();
+
+            // Option card clicks
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const input = this.querySelector('input');
+                    if (input.type === 'checkbox') {
+                        input.checked = !input.checked;
+                        this.classList.toggle('selected', input.checked);
+
+                        if (input.value === 'none' && input.checked) {
+                            this.closest('.form-group').querySelectorAll('.option-card').forEach(otherCard => {
+                                if (otherCard !== this) {
+                                    otherCard.classList.remove('selected');
+                                    otherCard.querySelector('input').checked = false;
+                                }
+                            });
+                        } else if (input.checked) {
+                            const noneOption = this.closest('.form-group').querySelector('.option-card[data-value="none"]');
+                            if (noneOption) {
+                                noneOption.classList.remove('selected');
+                                noneOption.querySelector('input').checked = false;
+                            }
+                        }
+
+                        const fieldName = input.name;
+                        if (!userData[fieldName]) userData[fieldName] = [];
+                        if (input.checked) {
+                            if (!userData[fieldName].includes(input.value)) {
+                                userData[fieldName].push(input.value);
+                            }
+                        } else {
+                            const index = userData[fieldName].indexOf(input.value);
+                            if (index > -1) userData[fieldName].splice(index, 1);
+                        }
+                    } else {
+                        input.checked = true;
+                        this.closest('.form-group').querySelectorAll('.option-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        userData[input.name] = input.value;
+
+                        // Handle gender selection
+                        if (input.name === 'gender') {
+                            const femaleQuestions = document.getElementById('femaleQuestions');
+                            femaleQuestions.style.display = input.value === 'female' ? 'block' : 'none';
+
+                            // Clear pregnancy answers if gender changes
+                            if (input.value !== 'female') {
+                                userData.pregnant = undefined;
+                                userData.trimester = undefined;
+                                document.querySelectorAll('[name="pregnant"], [name="trimester"]').forEach(el => {
+                                    el.checked = false;
+                                    el.closest('.option-card').classList.remove('selected');
+                                });
+                                document.getElementById('pregnancyTrimester').style.display = 'none';
+                            }
+                        }
+
+                        // Handle pregnancy selection
+                        if (input.name === 'pregnant') {
+                            const trimesterSection = document.getElementById('pregnancyTrimester');
+                            trimesterSection.style.display = input.value === 'yes' ? 'block' : 'none';
+                            if (input.value === 'no') {
+                                userData.trimester = undefined;
+                                document.querySelectorAll('[name="trimester"]').forEach(el => {
+                                    el.checked = false;
+                                    el.closest('.option-card').classList.remove('selected');
+                                });
+                            }
+                        }
+                    }
+                    console.log('Current user data:', userData);
+                });
+            });
+
+            // Next buttons
+            document.querySelectorAll('.next').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (!validateStep(currentStep)) {
+                        return;
+                    }
+
+                    if (this.id === 'submitBtn') {
+                        showResults();
+                        return;
+                    }
+
+                    document.getElementById(`step${currentStep}`).classList.remove('active');
+                    currentStep++;
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                    updateProgress();
+                });
+            });
+
+            // Previous buttons
+            document.querySelectorAll('.prev').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (this.id === 'restartBtn') {
+                        resetQuiz();
+                        return;
+                    }
+                    document.getElementById(`step${currentStep}`).classList.remove('active');
+                    currentStep--;
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                    updateProgress();
+                });
+            });
+
+            // Login button
+            document.getElementById('loginBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                // Redirect to login page
+                window.location.href = 'login.html'; // Change this to your actual login page URL
+            });
+
+            // Input handling
+            document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    userData[this.id] = this.value;
+                });
+            });
+
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', function() {
+                    userData[this.id] = this.value;
+                });
+            });
+
+            function updateProgress() {
+                const progress = (currentStep / totalSteps) * 100;
+                progressBar.style.width = `${progress}%`;
+                headerStatus.textContent = `Step ${currentStep} of ${totalSteps}`;
+            }
+
+            function validateStep(step) {
+                switch(step) {
+                    case 1:
+                        if (!userData.city || userData.city.trim() === '') {
+                            alert('Please enter your city');
+                            return false;
+                        }
+                        if (!userData.residential) {
+                            alert('Please select your residential area type');
+                            return false;
+                        }
+                        return true;
+                    case 2:
+                        if (!userData.conditions || userData.conditions.length === 0) {
+                            alert('Please select at least one health condition');
+                            return false;
+                        }
+                        return true;
+                    case 3:
+                        if (!userData.gender) {
+                            alert('Please select your gender');
+                            return false;
+                        }
+                        if (userData.gender === 'female') {
+                            if (!userData.pregnant) {
+                                alert('Please indicate if you are pregnant');
+                                return false;
+                            }
+                            if (userData.pregnant === 'yes' && !userData.trimester) {
+                                alert('Please select your trimester');
+                                return false;
+                            }
+                        }
+                        if (!userData.youngChildren) {
+                            alert('Please indicate if you have young children');
+                            return false;
+                        }
+                        return true;
+                    case 4:
+                        if (!userData.outdoorTime) {
+                            alert('Please select your outdoor time');
+                            return false;
+                        }
+                        if (!userData.outdoorExercise) {
+                            alert('Please select your outdoor exercise frequency');
+                            return false;
+                        }
+                        return true;
+                    case 5:
+                        if (!userData.airPurifier) {
+                            alert('Please indicate if you use air purifiers');
+                            return false;
+                        }
+                        if (!userData.nearRoad) {
+                            alert('Please indicate if you live near a big road');
+                            return false;
+                        }
+                        if (!userData.ventilation) {
+                            alert('Please indicate your home ventilation status');
+                            return false;
+                        }
+                        return true;
+                    case 6:
+                        if (!userData.symptoms || userData.symptoms.length === 0) {
+                            alert('Please select at least one symptom');
+                            return false;
+                        }
+                        return true;
+                    default:
+                        return true;
+                }
+            }
+
+            function calculateAQIRisk() {
+                let riskScore = 0;
+
+                switch(userData.residential) {
+                    case 'urban': riskScore += 40; break;
+                    case 'suburban': riskScore += 30; break;
+                    case 'rural': riskScore += 20; break;
+                    case 'industrial': riskScore += 60; break;
+                }
+
+                if (userData.conditions.includes('asthma')) riskScore += 20;
+                if (userData.conditions.includes('allergies')) riskScore += 15;
+                if (userData.conditions.includes('copd')) riskScore += 25;
+                if (userData.conditions.includes('heart')) riskScore += 20;
+
+                if (userData.gender === 'female' && userData.pregnant === 'yes') {
+                    riskScore += 25;
+                    if (userData.trimester === 'third') riskScore += 10;
+                }
+
+                if (userData.youngChildren === 'yes') riskScore += 15;
+
+                if (userData.outdoorTime === 'moderate') riskScore += 10;
+                else if (userData.outdoorTime === 'significant') riskScore += 20;
+
+                if (userData.outdoorExercise === 'regular') riskScore += 15;
+                else if (userData.outdoorExercise === 'sometimes') riskScore += 5;
+
+                if (userData.airPurifier === 'no') riskScore += 10;
+                if (userData.nearRoad === 'yes') riskScore += 15;
+                if (userData.ventilation === 'no') riskScore += 15;
+
+                const symptomCount = userData.symptoms.filter(s => s !== 'none').length;
+                riskScore += symptomCount * 10;
+
+                return Math.min(riskScore, 150);
+            }
+
+            function getRiskLabel(score) {
+                if (score < 50) return { label: 'Low Risk', class: 'success' };
+                if (score < 100) return { label: 'Moderate Risk', class: 'warning' };
+                return { label: 'High Risk', class: 'danger' };
+            }
+
+            function showResults() {
+                const riskScore = calculateAQIRisk();
+                const risk = getRiskLabel(riskScore);
+
+                document.querySelector('.quiz-container').style.display = 'none';
+                const results = document.getElementById('results');
+                results.classList.add('visible');
+
+                document.getElementById('aqiValue').textContent = riskScore;
+                document.getElementById('aqiLabel').textContent = risk.label;
+
+                const alertContainer = document.getElementById('alertContainer');
+                alertContainer.innerHTML = `<div class="alert alert-${risk.class}">Your AQI risk is assessed as ${risk.label.toLowerCase()} based on your responses.</div>`;
+
+                const recsContainer = document.getElementById('recommendationsContainer');
+                recsContainer.innerHTML = '';
+
+                const recs = [];
+                if (riskScore >= 100) {
+                    recs.push('Consider staying indoors during high pollution periods.');
+                    recs.push('Using an air purifier may improve indoor air quality.');
+                }
+                if (userData.nearRoad === 'yes') recs.push('Keep windows closed during peak traffic hours.');
+                if (userData.outdoorExercise === 'regular') recs.push('Opt for indoor exercise when air quality is poor.');
+                if (userData.conditions && userData.conditions.length > 0 && !userData.conditions.includes('none')) {
+                    recs.push('Consult a healthcare professional about air quality impacts.');
+                }
+                if (recs.length === 0) recs.push('Continue maintaining your current healthy practices.');
+
+                recs.forEach(rec => {
+                    recsContainer.innerHTML += `<div class="recommendation-item">${rec}</div>`;
+                });
+            }
+
+            function resetQuiz() {
+                Object.keys(userData).forEach(key => delete userData[key]);
+                userData.conditions = [];
+                userData.symptoms = [];
+                currentStep = 1;
+                document.getElementById('results').classList.remove('visible');
+                document.querySelector('.quiz-container').style.display = 'block';
+                document.getElementById('step1').classList.add('active');
+                document.querySelectorAll('.option-card').forEach(card => {
+                    card.classList.remove('selected');
+                    card.querySelector('input').checked = false;
+                });
+                document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => input.value = '');
+                document.querySelectorAll('select').forEach(select => select.value = '');
+                document.getElementById('femaleQuestions').style.display = 'none';
+                document.getElementById('pregnancyTrimester').style.display = 'none';
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+</html>

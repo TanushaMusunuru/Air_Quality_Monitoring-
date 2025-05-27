@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="icon" href="logo.png" type="image/png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@200;300;400;500;600;700&display=swap");
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Open Sans", sans-serif;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 0 10px;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url("back.jpeg"), #000;
+            background-position: center;
+            background-size: cover;
+        }
+        .wrapper {
+            width: 400px;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .input-field {
+            position: relative;
+            border-bottom: 2px solid #ccc;
+            margin: 15px 0;
+        }
+        .input-field label {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            color: #fff;
+            font-size: 16px;
+            pointer-events: none;
+            transition: 0.15s ease;
+        }
+        .input-field input {
+            width: 100%;
+            height: 40px;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: #fff;
+            caret-color: #fff;
+            text-shadow: 0 0 0 #fff;
+        }
+        .input-field input:-webkit-autofill,
+        .input-field input:-webkit-autofill:hover,
+        .input-field input:-webkit-autofill:focus,
+        .input-field input:-webkit-autofill:active {
+            -webkit-text-fill-color: #fff !important;
+            -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        .input-field input:focus~label,
+        .input-field input:valid~label {
+            font-size: 0.8rem;
+            top: 10px;
+            transform: translateY(-120%);
+        }
+        .forget {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 25px 0 35px 0;
+            color: #fff;
+        }
+        #remember {
+            accent-color: #fff;
+        }
+        .forget label {
+            display: flex;
+            align-items: center;
+        }
+        .forget label p {
+            margin-left: 8px;
+        }
+        .wrapper a {
+            color: #efefef;
+            text-decoration: none;
+        }
+        .wrapper a:hover {
+            text-decoration: underline;
+        }
+        #forgot-password {
+            color: #3498db;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        #forgot-password:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        #forgot-password.disabled {
+            color: #bdc3c7;
+            pointer-events: none;
+        }
+        button {
+            background: #fff;
+            color: #000;
+            font-weight: 600;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 16px;
+            border: 2px solid transparent;
+            transition: 0.3s ease;
+        }
+        button:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .register {
+            text-align: center;
+            margin-top: 30px;
+            color: #fff;
+        }
+        #error-message, #success-message {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        #error-message {
+            color: #ff4444;
+        }
+        #success-message {
+            color: #2ecc71;
+        }
+        .logout-message {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="logout-message" id="logout-message">
+        You have been logged out. Please login again.
+    </div>
+    <form id="login-form">
+        <h2>Login</h2>
+        <div class="input-field">
+            <input type="email" id="email-input" required>
+            <label>Enter your email</label>
+        </div>
+        <div class="input-field">
+            <input type="password" id="password-input" required>
+            <label>Enter your password</label>
+        </div>
+        <div class="forget">
+            <label for="remember">
+                <input type="checkbox" id="remember">
+                <p>Remember me</p>
+            </label>
+            <a href="#" id="forgot-password">Forgot password?</a>
+        </div>
+        <button type="submit">Log In</button>
+        <div id="error-message"></div>
+        <div id="success-message"></div>
+        <div class="register">
+            <p>Don't have an account? <a href="signup.html">Register</a></p>
+        </div>
+    </form>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM fully loaded");
+
+        // Show logout message if coming from logout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('logout')) {
+            document.getElementById('logout-message').style.display = 'block';
+        }
+
+        // Clear any existing login data
+        localStorage.removeItem('username');
+        console.log("Cleared any existing login data");
+
+        // Check if EmailJS is loaded
+        if (typeof emailjs === 'undefined') {
+            console.error("EmailJS not loaded");
+            alert("Failed to load EmailJS. Please check your internet connection.");
+            return;
+        }
+
+        // Initialize EmailJS with your public key
+        try {
+            emailjs.init("9aBlyrXDdJC6nBgjI"); // Replace with your EmailJS public key if different
+            console.log("EmailJS initialized");
+        } catch (error) {
+            console.error("EmailJS initialization failed:", error);
+            alert("Email service initialization failed.");
+        }
+
+        // Login form submission
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                console.log("Form submitted");
+
+                const email = document.getElementById('email-input').value.trim();
+                const password = document.getElementById('password-input').value.trim();
+
+                if (email && password) {
+                    console.log("Email:", email, "Password entered");
+                    const username = email.split('@')[0];
+                    localStorage.setItem('username', username);
+                    console.log("User stored in localStorage:", username);
+                    window.location.href = 'home.html';
+                } else {
+                    document.getElementById('error-message').textContent = 'Please fill in all fields';
+                    console.log("Validation failed: Empty fields");
+                }
+            });
+        } else {
+            console.error("Login form not found");
+        }
+
+        // Forgot Password functionality
+        const forgotPasswordLink = document.getElementById('forgot-password');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                console.log("Forgot password clicked");
+
+                const email = document.getElementById('email-input').value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!email) {
+                    errorMessage.textContent = "Please enter your email first.";
+                    successMessage.textContent = "";
+                    console.log("No email entered for password reset");
+                    return;
+                }
+
+                if (!emailRegex.test(email)) {
+                    errorMessage.textContent = "Please enter a valid email address.";
+                    successMessage.textContent = "";
+                    console.log("Invalid email format:", email);
+                    return;
+                }
+
+                // Disable link and show loading state
+                forgotPasswordLink.classList.add('disabled');
+                forgotPasswordLink.textContent = "Sending...";
+                errorMessage.textContent = "";
+                successMessage.textContent = "";
+
+                emailjs.send("service_7nepuie", "template_wiftios", {
+                    user_email: email,
+                    reset_link: `${window.location.origin}/reset-password.html?email=${encodeURIComponent(email)}`
+                }).then(
+                    function(response) {
+                        successMessage.textContent = "Reset email sent! Check your inbox.";
+                        errorMessage.textContent = "";
+                        console.log("Email sent successfully:", response);
+                    },
+                    function(error) {
+                        errorMessage.textContent = "Failed to send reset email. Try again later.";
+                        successMessage.textContent = "";
+                        console.error("Email send failed:", error);
+                    }
+                ).finally(() => {
+                    // Re-enable link
+                    forgotPasswordLink.classList.remove('disabled');
+                    forgotPasswordLink.textContent = "Forgot password?";
+                });
+            });
+        } else {
+            console.error("Forgot password link not found");
+        }
+    });
+</script>
+</body>
+</html>

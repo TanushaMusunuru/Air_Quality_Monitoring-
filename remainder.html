@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 AQI Health Check 🌿</title>
+    <style>
+        :root {
+            --primary: #2c5f2d; /* Dark green */
+            --success: #5cb85c;
+            --dark: #333333;
+            --light: rgba(255, 255, 255, 0.95);
+            --gray: #666666;
+            --accent: #ff9999; /* Cute pink accent */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+        body {
+            background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .reminder-container {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: 2px dashed var(--primary);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+            animation: bounceIn 0.8s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(44, 95, 45, 0.2);
+        }
+
+        p {
+            font-size: 18px;
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: var(--primary);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--success);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button::after {
+            content: '✨';
+            position: absolute;
+            font-size: 20px;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        button:hover::after {
+            opacity: 1;
+        }
+
+        .great-button {
+            background-color: var(--accent);
+        }
+
+        .great-button:hover {
+            background-color: #ff6666;
+        }
+
+        .questionnaire {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .questionnaire label {
+            display: block;
+            margin: 10px 0 5px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .questionnaire input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .questionnaire button {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .emoji-splash {
+            position: absolute;
+            font-size: 24px;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        .emoji-splash:nth-child(1) { top: 10%; left: 10%; }
+        .emoji-splash:nth-child(2) { top: 15%; right: 15%; animation-delay: 0.5s; }
+        .emoji-splash:nth-child(3) { bottom: 20%; left: 15%; animation-delay: 1s; }
+        .emoji-splash:nth-child(4) { bottom: 10%; right: 10%; animation-delay: 1.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @media (max-width: 480px) {
+            .reminder-container {
+                padding: 25px;
+            }
+            h2 {
+                font-size: 22px;
+            }
+            p {
+                font-size: 16px;
+            }
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+            .emoji-splash {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reminder-container">
+        <h2>🌟 Hey cutie, how’s the air treating you? 🌟</h2>
+        <p>Update your AQI health status, sweetie! 💖</p>
+        <div class="button-container">
+            <button id="update-btn">Update Now 🌈</button>
+            <button class="great-button" onclick="window.location.href='index.html'">Yayaya Feeling Great 🌸</button>
+        </div>
+
+        <!-- AQI Questionnaire -->
+        <div class="questionnaire" id="questionnaire">
+            <p>Oh no, sweetie! How’s the air affecting you? 🌫️</p>
+            <label><input type="checkbox" name="symptom" value="breathing"> Trouble breathing?</label>
+            <label><input type="checkbox" name="symptom" value="eyes"> Itchy or watery eyes?</label>
+            <label><input type="checkbox" name="symptom" value="cough"> Coughing or throat irritation?</label>
+            <button onclick="calculateSafeAQI()">Submit 🌟</button>
+        </div>
+
+        <!-- Cute emoji splash -->
+        <span class="emoji-splash">🌱</span>
+        <span class="emoji-splash">💕</span>
+        <span class="emoji-splash">🌼</span>
+        <span class="emoji-splash">🐾</span>
+    </div>
+
+    <script>
+        // Sparkle effect on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.reminder-container');
+            container.style.opacity = '0';
+            setTimeout(() => {
+                container.style.transition = 'opacity 0.5s ease';
+                container.style.opacity = '1';
+            }, 100);
+        });
+
+        // Show questionnaire when clicking "Update Now"
+        document.getElementById('update-btn').addEventListener('click', () => {
+            const questionnaire = document.getElementById('questionnaire');
+            const buttonContainer = document.querySelector('.button-container');
+            buttonContainer.style.display = 'none'; // Hide buttons
+            questionnaire.style.display = 'block'; // Show questionnaire
+        });
+
+        // Calculate safe AQI based on symptoms
+        function calculateSafeAQI() {
+            const symptoms = document.querySelectorAll('input[name="symptom"]:checked');
+            let safeAQI = 100; // Default safe AQI (moderate)
+            let message = 'Thanks for updating, cutie! ';
+
+            if (symptoms.length === 0) {
+                message += 'No symptoms? Yay! Your safe AQI is up to 100 (Moderate). Enjoy the fresh air! 🌈';
+            } else {
+                const symptomCount = symptoms.length;
+                if (symptomCount === 1) {
+                    safeAQI = 50; // Good
+                    message += 'One little issue? Your safe AQI is up to 50 (Good). Take it easy, sweetie! 🌿';
+                } else if (symptomCount === 2) {
+                    safeAQI = 25; // Very Good
+                    message += 'Two symptoms? Your safe AQI is up to 25 (Very Good). Stay safe, okay? 💕';
+                } else {
+                    safeAQI = 10; // Excellent
+                    message += 'Oh no, lots of symptoms! Your safe AQI is up to 10 (Excellent). Rest up, cutie! 🌸';
+                }
+            }
+
+            alert(message);
+            // Optionally redirect or save the result
+            window.location.href = 'aqi-health-assessment.html'; // Replace with your desired page
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Air Quality Route Planner</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #app-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        #sidebar {
+            width: 320px;
+            background-color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        #sidebar-header {
+            padding: 20px;
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        #sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        #map-container {
+            flex: 1;
+            position: relative;
+            height: 100vh;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .panel {
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background-color: #f3f4f6;
+            padding: 12px 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body {
+            padding: 15px;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 200px;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+
+        .legend div {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .legend i {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .route-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .route-details {
+            flex: 1;
+        }
+
+        .route-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .route-cities {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .route-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            left: 330px;
+            background-color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            cursor: pointer;
+            transition: left 0.3s ease;
+        }
+
+        #mobile-toggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .hotspot-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #fee2e2;
+        }
+
+        .hotspot-icon {
+            margin-right: 10px;
+            color: #ef4444;
+        }
+
+        .hotspot-details {
+            flex: 1;
+        }
+
+        .hotspot-city {
+            font-weight: 600;
+        }
+
+        .hotspot-aqi {
+            font-size: 12px;
+            color: #b91c1c;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                transform: translateX(-100%);
+            }
+
+            #mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .sidebar-open #sidebar {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="sidebar">
+            <div id="sidebar-header">
+                <h2><i class="fas fa-wind"></i> Air Quality Route Planner</h2>
+                <p>Plan routes with cleaner air</p>
+            </div>
+            <div id="sidebar-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Route Planner</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="startPoint">Start Point:</label>
+                            <div id="startPointDisplay">Not selected</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="endPoint">End Point:</label>
+                            <div id="endPointDisplay">Not selected</div>
+                        </div>
+                        <div class="form-group">
+                            <button id="getDirections" class="btn btn-primary" disabled><i class="fas fa-route"></i> Get Directions</button>
+                            <button id="clearRoute" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="routeName">Route Name:</label>
+                            <input type="text" id="routeName" class="form-control" placeholder="My Route">
+                            <button id="saveRoute" class="btn btn-success" style="margin-top: 8px;"><i class="fas fa-save"></i> Save Route</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Saved Routes</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="savedRoutesList">
+                            <p>No saved routes yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>AQI Hotspots</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="hotspotList">
+                            <div class="hotspot-item">
+                                <div class="hotspot-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="hotspot-details">
+                                    <div class="hotspot-city">Loading data...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="sidebar-toggle" class="sidebar-toggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <button id="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div id="map-container">
+            <div id="map"></div>
+            <div class="legend">
+                <h4>AQI Levels</h4>
+                <div><i style="background:#00E400"></i> Good (0-50)</div>
+                <div><i style="background:#FFFF00"></i> Moderate (51-100)</div>
+                <div><i style="background:#FF7E00"></i> Unhealthy for Sensitive (101-150)</div>
+                <div><i style="background:#FF0000"></i> Unhealthy (151-200)</div>
+                <div><i style="background:#8F3F97"></i> Very Unhealthy (201-300)</div>
+                <div><i style="background:#7E0023"></i> Hazardous (300+)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const map = L.map('map', {
+                preferCanvas: true,
+                zoomControl: false
+            }).setView([20.5937, 78.9629], 5);
+
+            L.control.zoom({ position: 'topright' }).addTo(map);
+
+            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '©️ OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            const osmDeLayer = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+                attribution: '©️ OpenStreetMap contributors',
+                maxZoom: 19
+            });
+
+            osmLayer.on('tileerror', function (err) {
+                console.log('Tile load error:', err);
+                map.removeLayer(osmLayer);
+                osmDeLayer.addTo(map);
+            });
+
+            let markersCluster = L.markerClusterGroup({
+                disableClusteringAtZoom: 10,
+                spiderfyOnMaxZoom: false,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                chunkedLoading: true,
+                chunkInterval: 100
+            });
+            let routingControl = null;
+            let deflectionControls = [];
+            let startMarker = null;
+            let endMarker = null;
+            let selectedStartPoint = null;
+            let selectedEndPoint = null;
+
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const mobileToggle = document.getElementById('mobile-toggle');
+            const appContainer = document.getElementById('app-container');
+            const startPointDisplay = document.getElementById('startPointDisplay');
+            const endPointDisplay = document.getElementById('endPointDisplay');
+
+            sidebarToggle.addEventListener('click', function () {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.style.transform === 'translateX(-100%)' || !sidebar.style.transform) {
+                    sidebar.style.transform = 'translateX(0)';
+                    this.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    this.style.left = '330px';
+                } else {
+                    sidebar.style.transform = 'translateX(-100%)';
+                    this.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    this.style.left = '10px';
+                }
+            });
+
+            mobileToggle.addEventListener('click', function () {
+                appContainer.classList.toggle('sidebar-open');
+            });
+
+            const sampleAQIData = {
+                cities: {
+                    "Delhi": { aqi: 342, lat: 28.6139, lng: 77.2090 },
+                    "Noida": { aqi: 320, lat: 28.5355, lng: 77.3910 },
+                    "Gurgaon": { aqi: 310, lat: 28.4595, lng: 77.0266 },
+                    "Ghaziabad": { aqi: 335, lat: 28.6692, lng: 77.4538 },
+                    "Faridabad": { aqi: 300, lat: 28.4089, lng: 77.3178 },
+                    "Greater Noida": { aqi: 325, lat: 28.4744, lng: 77.5030 },
+                    "Sonipat": { aqi: 290, lat: 28.9930, lng: 77.0150 },
+                    "Panipat": { aqi: 280, lat: 29.3909, lng: 76.9635 },
+                    "Meerut": { aqi: 295, lat: 28.9845, lng: 77.7064 },
+                    "Bahadurgarh": { aqi: 305, lat: 28.6929, lng: 76.9230 },
+                    "Mumbai": { aqi: 178, lat: 19.0760, lng: 72.8777 },
+                    "Bangalore": { aqi: 132, lat: 12.9716, lng: 77.5946 },
+                    "Hyderabad": { aqi: 156, lat: 17.3850, lng: 78.4867 },
+                    "Chennai": { aqi: 198, lat: 13.0827, lng: 80.2707 },
+                    "Kolkata": { aqi: 245, lat: 22.5726, lng: 88.3639 },
+                    "Ahmedabad": { aqi: 287, lat: 23.0225, lng: 72.5714 },
+                    "Pune": { aqi: 143, lat: 18.5204, lng: 73.8567 },
+                    "Jaipur": { aqi: 167, lat: 26.9124, lng: 75.7873 },
+                    "Lucknow": { aqi: 212, lat: 26.8467, lng: 80.9462 },
+                    "Kanpur": { aqi: 230, lat: 26.4499, lng: 80.3319 },
+                    "Nagpur": { aqi: 145, lat: 21.1458, lng: 79.0882 },
+                    "Indore": { aqi: 160, lat: 22.7196, lng: 75.8577 },
+                    "Bhopal": { aqi: 175, lat: 23.2599, lng: 77.4126 },
+                    "Patna": { aqi: 260, lat: 25.5941, lng: 85.1376 },
+                    "Chandigarh": { aqi: 155, lat: 30.7333, lng: 76.7794 },
+                    "Coimbatore": { aqi: 120, lat: 11.0168, lng: 76.9558 },
+                    "Visakhapatnam": { aqi: 140, lat: 17.6868, lng: 83.2185 },
+                    "Surat": { aqi: 190, lat: 21.1702, lng: 72.8311 },
+                    "Kochi": { aqi: 110, lat: 9.9312, lng: 76.2673 },
+                    "Guwahati": { aqi: 200, lat: 26.1445, lng: 91.7362 }
+                }
+            };
+
+            function getAQIColor(aqi) {
+                if (aqi <= 50) return '#00E400';
+                if (aqi <= 100) return '#FFFF00';
+                if (aqi <= 150) return '#FF7E00';
+                if (aqi <= 200) return '#FF0000';
+                if (aqi <= 300) return '#8F3F97';
+                return '#7E0023';
+            }
+
+            function getAQIDescription(aqi) {
+                if (aqi <= 50) return 'Good';
+                if (aqi <= 100) return 'Moderate';
+                if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+                if (aqi <= 200) return 'Unhealthy';
+                if (aqi <= 300) return 'Very Unhealthy';
+                return 'Hazardous';
+            }
+
+            function createAQIMarkers() {
+                markersCluster.clearLayers();
+                const markerList = [];
+
+                for (const city in sampleAQIData.cities) {
+                    const cityData = sampleAQIData.cities[city];
+                    const aqi = cityData.aqi;
+                    const color = getAQIColor(aqi);
+
+                    const circle = L.circleMarker([cityData.lat, cityData.lng], {
+                        radius: 8,
+                        fillColor: color,
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+
+                    circle.bindPopup(`
+                        <b>${city}</b><br>
+                        AQI: ${aqi} (${getAQIDescription(aqi)})
+                    `);
+
+                    markerList.push(circle);
+                }
+
+                markersCluster.addLayers(markerList);
+                map.addLayer(markersCluster);
+            }
+
+            function setStartPoint(lat, lng) {
+                if (startMarker) {
+                    map.removeLayer(startMarker);
+                }
+
+                startMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'start-marker',
+                        html: '<i class="fas fa-map-marker-alt" style="color: #3b82f6; font-size: 32px;"></i>',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    })
+                }).addTo(map);
+
+                selectedStartPoint = { lat, lng };
+                startPointDisplay.innerHTML = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                checkRouteReady();
+            }
+
+            function setEndPoint(lat, lng) {
+                if (endMarker) {
+                    map.removeLayer(endMarker);
+                }
+
+                endMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'end-marker',
+                        html: '<i class="fas fa-map-marker-alt" style="color: #ef4444; font-size: 32px;"></i>',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    })
+                }).addTo(map);
+
+                selectedEndPoint = { lat, lng };
+                endPointDisplay.innerHTML = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                checkRouteReady();
+            }
+
+            function checkRouteReady() {
+                const getDirectionsBtn = document.getElementById('getDirections');
+                getDirectionsBtn.disabled = !(selectedStartPoint && selectedEndPoint);
+            }
+
+            function calculateRoute() {
+                if (!selectedStartPoint || !selectedEndPoint) return;
+
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+                deflectionControls.forEach(control => map.removeControl(control));
+                deflectionControls = [];
+
+                const waypoints = [L.latLng(selectedStartPoint.lat, selectedStartPoint.lng)];
+                const cities = Object.entries(sampleAQIData.cities);
+
+                // Filter out high AQI areas (>150)
+                const safeCities = cities.filter(([_, data]) => data.aqi <= 150)
+                    .map(([city, data]) => ({
+                        name: city,
+                        lat: data.lat,
+                        lng: data.lng,
+                        aqi: data.aqi,
+                        distanceToStart: Math.sqrt(
+                            Math.pow(data.lat - selectedStartPoint.lat, 2) +
+                            Math.pow(data.lng - selectedStartPoint.lng, 2)
+                        ),
+                        distanceToEnd: Math.sqrt(
+                            Math.pow(data.lat - selectedEndPoint.lat, 2) +
+                            Math.pow(data.lng - selectedEndPoint.lng, 2)
+                        )
+                    }))
+                    .filter(point => {
+                        const totalDistance = Math.sqrt(
+                            Math.pow(selectedEndPoint.lat - selectedStartPoint.lat, 2) +
+                            Math.pow(selectedEndPoint.lng - selectedStartPoint.lng, 2)
+                        );
+                        return point.distanceToStart + point.distanceToEnd < totalDistance * 1.5;
+                    })
+                    .sort((a, b) => a.aqi - b.aqi)
+                    .slice(0, 2);
+
+                safeCities.forEach(point => waypoints.push(L.latLng(point.lat, point.lng)));
+                waypoints.push(L.latLng(selectedEndPoint.lat, selectedEndPoint.lng));
+
+                // Main route
+                routingControl = L.Routing.control({
+                    waypoints: waypoints,
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    fitSelectedRoutes: true,
+                    lineOptions: {
+                        styles: [{ color: '#3b82f6', opacity: 0.7, weight: 5 }]
+                    },
+                    createMarker: function () { return null; }
+                }).addTo(map);
+
+                // Check if the route passes through high AQI areas and add deflections
+                const allCities = cities.map(([city, data]) => ({
+                    name: city,
+                    lat: data.lat,
+                    lng: data.lng,
+                    aqi: data.aqi
+                }));
+
+                routingControl.on('routesfound', function (e) {
+                    const route = e.routes[0];
+                    const routeCoords = route.coordinates;
+
+                    // Find high AQI cities near the route
+                    const highAQICities = allCities.filter(city => city.aqi > 150).filter(city => {
+                        return routeCoords.some(coord => {
+                            const distance = Math.sqrt(
+                                Math.pow(coord.lat - city.lat, 2) +
+                                Math.pow(coord.lng - city.lng, 2)
+                            );
+                            return distance < 0.5; // Within ~50km (approximate)
+                        });
+                    });
+
+                    highAQICities.forEach(city => {
+                        // Create deflection waypoints by shifting slightly
+                        const deflectionWaypoints = [
+                            L.latLng(selectedStartPoint.lat, selectedStartPoint.lng),
+                            L.latLng(city.lat + 0.1, city.lng + 0.1), // Slight detour
+                            L.latLng(selectedEndPoint.lat, selectedEndPoint.lng)
+                        ];
+
+                        const deflectionControl = L.Routing.control({
+                            waypoints: deflectionWaypoints,
+                            routeWhileDragging: false,
+                            showAlternatives: false,
+                            addWaypoints: false,
+                            draggableWaypoints: false,
+                            fitSelectedRoutes: false,
+                            lineOptions: {
+                                styles: [{ color: '#10b981', opacity: 0.5, weight: 3, dashArray: '10' }]
+                            },
+                            createMarker: function () { return null; }
+                        }).addTo(map);
+
+                        deflectionControls.push(deflectionControl);
+                    });
+                });
+            }
+
+            function clearRoute() {
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                    routingControl = null;
+                }
+                deflectionControls.forEach(control => map.removeControl(control));
+                deflectionControls = [];
+
+                if (startMarker) {
+                    map.removeLayer(startMarker);
+                    startMarker = null;
+                }
+
+                if (endMarker) {
+                    map.removeLayer(endMarker);
+                    endMarker = null;
+                }
+
+                selectedStartPoint = null;
+                selectedEndPoint = null;
+                startPointDisplay.textContent = 'Not selected';
+                endPointDisplay.textContent = 'Not selected';
+
+                document.getElementById('getDirections').disabled = true;
+            }
+
+            function saveRoute() {
+                if (!selectedStartPoint || !selectedEndPoint) {
+                    alert('Please select both start and end points first.');
+                    return;
+                }
+
+                const routeName = document.getElementById('routeName').value.trim() || 'My Route';
+                const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+
+                const newRoute = {
+                    id: Date.now(),
+                    name: routeName,
+                    start: selectedStartPoint,
+                    end: selectedEndPoint,
+                    createdAt: new Date().toISOString()
+                };
+
+                savedRoutes.push(newRoute);
+                localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+
+                alert('Route saved successfully!');
+                renderSavedRoutes();
+            }
+
+            function renderSavedRoutes() {
+                const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+                const savedRoutesList = document.getElementById('savedRoutesList');
+
+                if (savedRoutes.length === 0) {
+                    savedRoutesList.innerHTML = '<p>No saved routes yet.</p>';
+                    return;
+                }
+
+                savedRoutesList.innerHTML = '';
+
+                savedRoutes.forEach(route => {
+                    const routeItem = document.createElement('div');
+                    routeItem.className = 'route-item';
+                    routeItem.innerHTML = `
+                        <div class="route-details">
+                            <div class="route-name">${route.name}</div>
+                            <div class="route-cities">Lat: ${route.start.lat.toFixed(4)}, Lng: ${route.start.lng.toFixed(4)} → Lat: ${route.end.lat.toFixed(4)}, Lng: ${route.end.lng.toFixed(4)}</div>
+                        </div>
+                        <div class="route-actions">
+                            <button class="btn btn-primary btn-sm load-route" data-id="${route.id}"><i class="fas fa-map-marked-alt"></i></button>
+                            <button class="btn btn-danger btn-sm delete-route" data-id="${route.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+
+                    savedRoutesList.appendChild(routeItem);
+                });
+
+                document.querySelectorAll('.load-route').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const routeId = parseInt(this.getAttribute('data-id'));
+                        loadRoute(routeId);
+                    });
+                });
+
+                document.querySelectorAll('.delete-route').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const routeId = parseInt(this.getAttribute('data-id'));
+                        deleteRoute(routeId);
+                    });
+                });
+            }
+
+            function loadRoute(routeId) {
+                const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+                const route = savedRoutes.find(r => r.id === routeId);
+
+                if (route) {
+                    clearRoute();
+                    setStartPoint(route.start.lat, route.start.lng);
+                    setEndPoint(route.end.lat, route.end.lng);
+                    document.getElementById('routeName').value = route.name;
+                    calculateRoute();
+                }
+            }
+
+            function deleteRoute(routeId) {
+                if (confirm('Are you sure you want to delete this route?')) {
+                    const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+                    const updatedRoutes = savedRoutes.filter(r => r.id !== routeId);
+
+                    localStorage.setItem('savedRoutes', JSON.stringify(updatedRoutes));
+                    renderSavedRoutes();
+                }
+            }
+
+            function renderAQIHotspots() {
+                const hotspotList = document.getElementById('hotspotList');
+                hotspotList.innerHTML = '';
+
+                const sortedCities = Object.entries(sampleAQIData.cities)
+                    .sort((a, b) => b[1].aqi - a[1].aqi)
+                    .slice(0, 5);
+
+                sortedCities.forEach(([city, data]) => {
+                    const hotspotItem = document.createElement('div');
+                    hotspotItem.className = 'hotspot-item';
+                    hotspotItem.innerHTML = `
+                        <div class="hotspot-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="hotspot-details">
+                            <div class="hotspot-city">${city}</div>
+                            <div class="hotspot-aqi">AQI: ${data.aqi} (${getAQIDescription(data.aqi)})</div>
+                        </div>
+                    `;
+
+                    hotspotItem.addEventListener('click', () => {
+                        map.setView([data.lat, data.lng], 12);
+                    });
+
+                    hotspotList.appendChild(hotspotItem);
+                });
+            }
+
+            document.getElementById('getDirections').addEventListener('click', calculateRoute);
+            document.getElementById('clearRoute').addEventListener('click', clearRoute);
+            document.getElementById('saveRoute').addEventListener('click', saveRoute);
+
+            createAQIMarkers();
+            renderSavedRoutes();
+            renderAQIHotspots();
+
+            map.on('click', function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                const popupContent = document.createElement('div');
+                popupContent.innerHTML = `
+                    Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}<br>
+                    <button class="btn btn-primary btn-sm set-start">Set as Start</button>
+                    <button class="btn btn-danger btn-sm set-end">Set as End</button>
+                `;
+
+                popupContent.querySelector('.set-start').addEventListener('click', function () {
+                    setStartPoint(lat, lng);
+                    map.closePopup();
+                });
+
+                popupContent.querySelector('.set-end').addEventListener('click', function () {
+                    setEndPoint(lat, lng);
+                    map.closePopup();
+                });
+
+                L.popup()
+                    .setLatLng([lat, lng])
+                    .setContent(popupContent)
+                    .openOn(map);
+            });
+        });
+    </script>
+</body>
+</html>

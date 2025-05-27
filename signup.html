@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi Step Form</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link rel="icon" href="logo.png" type="image/png">
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        outline: none;
+        font-family: "Poppins", sans-serif;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: url("back.jpeg") no-repeat center center fixed;
+        background-size: cover;
+      }
+      .container {
+        width: 330px;
+        background: rgba(255, 255, 255, 0.1);
+        text-align: center;
+        border-radius: 5px;
+        padding: 50px 35px 10px 35px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      }
+      .container header {
+        font-size: 35px;
+        font-weight: 600;
+        margin-bottom: 30px;
+      }
+      .form-outer form {
+        display: flex;
+        width: 400%;
+      }
+      .form-outer {
+        width: 100%;
+        overflow: hidden;
+      }
+      .page {
+        width: 25%;
+        transition: margin-left 0.3s ease-in-out;
+      }
+      .field.btns {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px; /* Adjust the gap as needed */
+}
+      .title {
+        text-align: left;
+        font-size: 25px;
+        font-weight: 500;
+      }
+      .field {
+        width: 330px;
+        height: 45px;
+        margin: 45px 0;
+        display: flex;
+        position: relative;
+      }
+      .label {
+        position: absolute;
+        top: -30px;
+        font-weight: 500;
+      }
+      input,
+      select {
+        width: 100%;
+        height: 100%;
+        border: 1px solid lightgrey;
+        border-radius: 5px;
+        padding-left: 15px;
+        font-size: 18px;
+      }
+      button {
+        width: 100%;
+        height: calc(100% + 5px);
+        border: none;
+        background: #28a745;
+        margin-top: -20px;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: 0.5s ease;
+      }
+      button:hover {
+        background: #218838;
+      }
+      .btns button {
+        margin-top: -20px !important;
+      }
+      .progress-bar {
+        display: flex;
+        margin: 40px 0;
+        user-select: none;
+      }
+      .step {
+        text-align: center;
+        width: 100%;
+        position: relative;
+      }
+      .step p {
+        font-weight: 500;
+        font-size: 18px;
+        color: #000;
+        margin-bottom: 8px;
+      }
+      .bullet {
+        height: 25px;
+        width: 25px;
+        border: 2px solid #000;
+        display: inline-block;
+        border-radius: 50%;
+        position: relative;
+        font-weight: 500;
+        font-size: 17px;
+        line-height: 25px;
+      }
+      .bullet.active {
+        border-color: #28a745;
+        background: #28a745;
+      }
+      .bullet span {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .bullet.active span {
+        display: none;
+      }
+      .bullet:after {
+        content: "";
+        position: absolute;
+        bottom: 11px;
+        right: -51px;
+        height: 3px;
+        width: 44px;
+        background: #262626;
+      }
+      .bullet.active:after {
+        background: #28a745;
+        transform: scaleX(0);
+        animation: animate 0.3s linear forwards;
+        transform-origin: left;
+      }
+      .step:last-child .bullet:after {
+        display: none;
+      }
+      .check {
+        position: absolute;
+        left: 50%;
+        top: 70%;
+        font-size: 15px;
+        transform: translate(-50%, -50%);
+        display: none;
+      }
+      .check.active {
+        display: block;
+        color: #fff;
+      }
+      @keyframes animate {
+        100% {
+          transform: scaleX(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>Signup Form</header>
+      <div class="progress-bar">
+        <div class="step">
+          <p>Name</p>
+          <div class="bullet"><span>1</span></div>
+          <div class="check fas fa-check"></div>
+        </div>
+        <div class="step">
+          <p>Contact</p>
+          <div class="bullet"><span>2</span></div>
+          <div class="check fas fa-check"></div>
+        </div>
+        <div class="step">
+          <p>Birth</p>
+          <div class="bullet"><span>3</span></div>
+          <div class="check fas fa-check"></div>
+        </div>
+        <div class="step">
+          <p>Submit</p>
+          <div class="bullet"><span>4</span></div>
+          <div class="check fas fa-check"></div>
+        </div>
+      </div>
+      <div class="form-outer">
+        <form id="signupForm">
+          <div class="page slide-page">
+            <div class="title">Basic Info:</div>
+            <div class="field">
+              <div class="label">First Name</div>
+              <input type="text" id="firstName" required />
+            </div>
+            <div class="field">
+              <div class="label">Last Name</div>
+              <input type="text" id="lastName" required />
+            </div>
+            <div class="field">
+              <button class="firstNext next">Next</button>
+            </div>
+          </div>
+          <div class="page">
+            <div class="title">Contact Info:</div>
+            <div class="field">
+              <div class="label">Email Address</div>
+              <input type="email" id="email" required />
+            </div>
+            <div class="field">
+              <div class="label">Phone Number</div>
+              <input type="tel" id="phone" required />
+            </div>
+            <div class="field btns">
+              <button class="prev-1 prev">Previous</button>
+              <button class="next-1 next">Next</button>
+            </div>
+          </div>
+          <div class="page">
+            <div class="title">Date of Birth:</div>
+            <div class="field">
+              <div class="label">Date</div>
+              <input type="date" id="dob" required />
+            </div>
+            <div class="field">
+              <div class="label">Gender</div>
+              <select id="gender" required>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field btns">
+              <button class="prev-2 prev">Previous</button>
+              <button class="next-2 next">Next</button>
+            </div>
+          </div>
+          <div class="page">
+            <div class="title">Login Details:</div>
+            <div class="field">
+              <div class="label">Username</div>
+              <input type="text" id="username" required />
+            </div>
+            <div class="field">
+              <div class="label">Password</div>
+              <input type="password" id="password" required />
+            </div>
+            <div class="field btns">
+              <button class="prev-3 prev">Previous</button>
+              <button class="submit">Submit</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const slidePage = document.querySelector(".slide-page");
+      const nextBtnFirst = document.querySelector(".firstNext");
+      const prevBtnSec = document.querySelector(".prev-1");
+      const nextBtnSec = document.querySelector(".next-1");
+      const prevBtnThird = document.querySelector(".prev-2");
+      const nextBtnThird = document.querySelector(".next-2");
+      const prevBtnFourth = document.querySelector(".prev-3");
+      const submitBtn = document.querySelector(".submit");
+      const bullet = document.querySelectorAll(".step .bullet");
+      const progressCheck = document.querySelectorAll(".step .check");
+      const progressText = document.querySelectorAll(".step p");
+
+      let current = 1;
+
+      nextBtnFirst.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "-25%";
+        updateProgress();
+      };
+      nextBtnSec.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "-50%";
+        updateProgress();
+      };
+      nextBtnThird.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "-75%";
+        updateProgress();
+      };
+
+      function updateProgress() {
+        bullet[current - 1].classList.add("active");
+        progressCheck[current - 1].classList.add("active");
+        progressText[current - 1].classList.add("active");
+        current += 1;
+      }
+
+      function goBack() {
+        bullet[current - 2].classList.remove("active");
+        progressCheck[current - 2].classList.remove("active");
+        progressText[current - 2].classList.remove("active");
+        current -= 1;
+      }
+
+      prevBtnSec.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "0%";
+        goBack();
+      };
+      prevBtnThird.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "-25%";
+        goBack();
+      };
+      prevBtnFourth.onclick = function (e) {
+        e.preventDefault();
+        slidePage.style.marginLeft = "-50%";
+        goBack();
+      };
+
+      submitBtn.onclick = function (e) {
+        e.preventDefault();
+
+        // Collect form data
+        const formData = {
+          firstName: document.getElementById("firstName").value,
+          lastName: document.getElementById("lastName").value,
+          email: document.getElementById("email").value,
+          phone: document.getElementById("phone").value,
+          dob: document.getElementById("dob").value,
+          gender: document.getElementById("gender").value,
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value,
+        };
+
+        // Save to localStorage
+        localStorage.setItem("userData", JSON.stringify(formData));
+
+        // Redirect to questions page
+        window.location.href = "questions.html";
+      };
+    </script>
+  </body>
+</html>

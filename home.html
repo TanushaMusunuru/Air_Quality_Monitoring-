@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Env</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --header-color: #2c3e50;
+            --sidebar-color: #34495e;
+            --card-color: #fff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --nav-hover: #2c3e50;
+            --transparency: 0.9;
+        }
+
+        .dark-theme {
+            --bg-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --header-color: #121212;
+            --sidebar-color: #1e1e1e;
+            --card-color: #2d2d2d;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --nav-hover: #3a3a3a;
+            --transparency: 0.85;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            background-image: url('back.jpeg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: -1;
+            opacity: var(--transparency);
+        }
+
+        .dark-theme body::before {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-color);
+            color: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .sidebar-header p {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background-color: var(--nav-hover);
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--header-color);
+            color: white;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        .content-frame {
+            width: 100%;
+            height: calc(100vh - 120px);
+            border: none;
+            border-radius: 8px;
+            background-color: var(--card-color);
+            box-shadow: var(--shadow);
+        }
+
+        /* Robot Button for Chatbot */
+        .robot-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .robot-btn:hover {
+            transform: scale(1.1);
+            background-color: #2980b9;
+        }
+
+        .robot-btn img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Chatbot iframe styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px;
+            left: 30px;
+            width: 350px;
+            height: 500px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 101;
+            display: none;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .chatbot-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .chatbot-container iframe {
+            width: 100%;
+            height: calc(100% - 40px);
+            border: none;
+        }
+
+        .close-chatbot {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 102;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        /* AQI Reminder Icon Styles */
+        .aqi-reminder-icon {
+            position: fixed;
+            bottom: 160px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            background: #2c5f2d;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            animation: pulse 2s infinite, float 3s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        /* AQI Reminder Popup Styles */
+        .aqi-reminder-popup {
+            position: fixed;
+            bottom: 220px;
+            left: 30px;
+            width: 250px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+
+        .aqi-reminder-popup.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AQI Questionnaire Popup Styles */
+        .aqi-questionnaire-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background: white;
+
+            padding: 20px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            z-index: 1002;
+            display: none;
+
+        }
+
+        .aqi-questionnaire-popup.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .aqi-questionnaire-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .aqi-questionnaire-title {
+            color: #2c5f2d;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .aqi-questionnaire-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .aqi-questionnaire-content {
+            margin-bottom: 20px;
+        }
+
+        .aqi-questionnaire-question {
+            margin-bottom: 15px;
+        }
+
+        .aqi-questionnaire-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .aqi-questionnaire-checkbox {
+            margin-right: 8px;
+        }
+
+        .aqi-questionnaire-submit {
+            width: 100%;
+            padding: 12px;
+            background: #2c5f2d;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .aqi-questionnaire-submit:hover {
+            background: #5cb85c;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: none;
+        }
+
+        .popup-overlay.show {
+            display: block;
+        }
+    </style>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Env</h2>
+                <p>Welcome, <span id="username-display">User</span>!</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard" data-url="http://127.0.0.1:5001">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Analytics</span>
+                </li>
+                <li class="nav-item" data-page="map" data-url="map.html">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Map</span>
+                </li>
+                <li class="nav-item" data-page="gaming" data-url="Gaming.html">
+                    <i class="fas fa-gamepad"></i>
+                    <span>EnviroShift</span>
+                </li>
+                </li>
+                <li class="nav-item" data-page="PreQ" data-url="http://127.0.0.1:5003/">
+
+                    <span>PreQ</span>
+                </li>
+                <li class="nav-item" data-page="Gallery" data-url="gallery.html">
+
+                    <span>#SnapTheGreen</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="user-info">
+                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=3498db&color=fff" alt="User">
+                    <span id="header-username">User</span>
+                </div>
+                <div>
+                    <button class="theme-toggle" id="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="logout-btn" id="logout-btn">Logout</button>
+                </div>
+            </div>
+
+            <!-- Content Frame -->
+            <iframe id="content-frame" class="content-frame" src="/dashboard"></iframe>
+        </div>
+    </div>
+
+    <!-- Robot Button for Chatbot -->
+    <div class="robot-btn" id="robot-btn">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Chatbot">
+    </div>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <i class="fas fa-robot chatbot-icon"></i>
+            <span>Chat Assistant</span>
+            <button class="close-chatbot" id="close-chatbot">×</button>
+        </div>
+        <iframe src="chatbot.html" title="Chatbot"></iframe>
+    </div>
+
+    <!-- AQI Reminder Icon -->
+    <div class="aqi-reminder-icon" id="aqiReminderIcon">🌿</div>
+
+    <!-- AQI Reminder Popup -->
+    <div class="aqi-reminder-popup" id="aqiReminderPopup">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: #000000;">Air Quality Check</strong>
+            <button id="aqiReminderClose" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #000000;">×</button>
+        </div>
+        <p style="margin-bottom: 15px; color: #000000;">How's the air treating you today?</p>
+        <div style="display: flex; gap: 10px;">
+            <button id="aqiUpdateBtn" style="flex: 1; padding: 8px; background: #2c5f2d; color: white; border: none; border-radius: 20px; cursor: pointer;">Update</button>
+            <button id="aqiGreatBtn" style="flex: 1; padding: 8px; background: #ff9999; color: white; border: none; border-radius: 20px; cursor: pointer;">Feeling Great</button>
+        </div>
+    </div>
+
+    <!-- AQI Questionnaire Popup -->
+    <div class="popup-overlay" id="aqiQuestionnaireOverlay"></div>
+    <div class="aqi-questionnaire-popup" id="aqiQuestionnairePopup">
+        <div class="aqi-questionnaire-header">
+            <div class="aqi-questionnaire-title">AQI Health Check 🌿</div>
+            <button class="aqi-questionnaire-close" id="aqiQuestionnaireClose">×</button>
+        </div>
+        <div class="aqi-questionnaire-content">
+            <p style="margin-bottom: 15px; color: #666;">Oh no! How's the air affecting you today?</p>
+
+            <div class="aqi-questionnaire-question">
+                <label class="aqi-questionnaire-label">
+                    <input type="checkbox" class="aqi-questionnaire-checkbox" name="symptom" value="breathing">
+                    Trouble breathing? 🌬️
+                </label>
+            </div>
+
+            <div class="aqi-questionnaire-question">
+                <label class="aqi-questionnaire-label">
+                    <input type="checkbox" class="aqi-questionnaire-checkbox" name="symptom" value="eyes">
+                    Itchy or watery eyes? 👀
+                </label>
+            </div>
+
+            <div class="aqi-questionnaire-question">
+                <label class="aqi-questionnaire-label">
+                    <input type="checkbox" class="aqi-questionnaire-checkbox" name="symptom" value="cough">
+                    Coughing or throat irritation? 🤧
+                </label>
+            </div>
+
+            <div class="aqi-questionnaire-question">
+                <label class="aqi-questionnaire-label">
+                    <input type="checkbox" class="aqi-questionnaire-checkbox" name="symptom" value="headache">
+                    Headaches? 🤕
+                </label>
+            </div>
+
+            <div class="aqi-questionnaire-question">
+                <label class="aqi-questionnaire-label">
+                    <input type="checkbox" class="aqi-questionnaire-checkbox" name="symptom" value="fatigue">
+                    Unusual fatigue? 😴
+                </label>
+            </div>
+        </div>
+        <button class="aqi-questionnaire-submit" id="aqiQuestionnaireSubmit">Submit 🌟</button>
+    </div>
+
+    <script>
+        // Get username from URL parameters or localStorage
+        function getUsername() {
+            // Check URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUsername = urlParams.get('username');
+
+            if (urlUsername) {
+                localStorage.setItem('username', urlUsername);
+                return urlUsername;
+            }
+
+            // Fallback to localStorage
+            return localStorage.getItem('username') || 'Guest';
+        }
+
+        // Display username in the sidebar and header
+        const username = getUsername();
+        document.getElementById('username-display').textContent = username;
+        document.getElementById('header-username').textContent = username;
+
+        // Update the user avatar with the username
+        document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=3498db&color=fff`;
+
+        // Navigation between pages
+        const navItems = document.querySelectorAll('.nav-item');
+        const contentFrame = document.getElementById('content-frame');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(navItem => navItem.classList.remove('active'));
+                item.classList.add('active');
+
+                const url = item.getAttribute('data-url');
+                contentFrame.src = url;
+            });
+        });
+
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-theme');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            if (body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('username');
+            window.location.href = 'login.html?logout=true';
+        });
+
+        // Chatbot functionality
+        const robotBtn = document.getElementById('robot-btn');
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const closeChatbot = document.getElementById('close-chatbot');
+
+        // Toggle chatbot visibility
+        function toggleChatbot() {
+            if (chatbotContainer.style.display === 'block') {
+                chatbotContainer.style.display = 'none';
+            } else {
+                chatbotContainer.style.display = 'block';
+            }
+        }
+
+        robotBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleChatbot();
+        });
+
+        closeChatbot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            chatbotContainer.style.display = 'none';
+        });
+
+        // Close chatbot when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!chatbotContainer.contains(event.target) && event.target !== robotBtn) {
+                chatbotContainer.style.display = 'none';
+            }
+        });
+
+        // Prevent clicks inside chatbot from closing it
+        chatbotContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // AQI Reminder Functionality
+        const reminderIcon = document.getElementById('aqiReminderIcon');
+        const reminderPopup = document.getElementById('aqiReminderPopup');
+        const reminderClose = document.getElementById('aqiReminderClose');
+        const updateBtn = document.getElementById('aqiUpdateBtn');
+        const greatBtn = document.getElementById('aqiGreatBtn');
+        const questionnaireOverlay = document.getElementById('aqiQuestionnaireOverlay');
+        const questionnairePopup = document.getElementById('aqiQuestionnairePopup');
+        const questionnaireClose = document.getElementById('aqiQuestionnaireClose');
+        const questionnaireSubmit = document.getElementById('aqiQuestionnaireSubmit');
+
+        // Show reminder popup when icon is clicked
+        reminderIcon.addEventListener('click', () => {
+            reminderPopup.classList.add('show');
+        });
+
+        // Close reminder popup
+        reminderClose.addEventListener('click', () => {
+            reminderPopup.classList.remove('show');
+        });
+
+        // Update button - show questionnaire popup
+        updateBtn.addEventListener('click', () => {
+            reminderPopup.classList.remove('show');
+            questionnaireOverlay.classList.add('show');
+            questionnairePopup.classList.add('show');
+        });
+
+        // Feeling Great button
+        greatBtn.addEventListener('click', () => {
+            reminderPopup.classList.remove('show');
+            alert('Great to hear! 😊');
+        });
+
+        // Close questionnaire popup
+        questionnaireClose.addEventListener('click', () => {
+            questionnaireOverlay.classList.remove('show');
+            questionnairePopup.classList.remove('show');
+        });
+
+        // Close questionnaire when clicking overlay
+        questionnaireOverlay.addEventListener('click', () => {
+            questionnaireOverlay.classList.remove('show');
+            questionnairePopup.classList.remove('show');
+        });
+
+        // Submit questionnaire
+        questionnaireSubmit.addEventListener('click', () => {
+            const symptoms = document.querySelectorAll('.aqi-questionnaire-checkbox:checked');
+            let message = 'Thanks for updating! ';
+
+            if (symptoms.length === 0) {
+                message += 'No symptoms? Your safe AQI is up to 100 (Moderate). Enjoy the fresh air! 🌈';
+            } else if (symptoms.length === 1) {
+                message += 'One little issue? Your safe AQI is up to 50 (Good). Take it easy! 🌿';
+            } else if (symptoms.length === 2) {
+                message += 'Two symptoms? Your safe AQI is up to 25 (Very Good). Stay safe! 💕';
+            } else {
+                message += 'Oh no, several symptoms! Your safe AQI is up to 10 (Excellent). Rest up! 🌸';
+            }
+
+            alert(message);
+
+            // Close the popups
+            questionnaireOverlay.classList.remove('show');
+            questionnairePopup.classList.remove('show');
+        });
+
+        // Show icon after 5 seconds
+        setTimeout(() => {
+            reminderIcon.style.display = 'flex';
+        }, 5000);
+
+        // Load initial content
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeItem = document.querySelector('.nav-item.active');
+            if (activeItem) {
+                contentFrame.src = activeItem.getAttribute('data-url');
+            }
+        });
+    </script>
+</body>
+</html>

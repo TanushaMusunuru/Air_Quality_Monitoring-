@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Quality Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Background styles */
+    body {
+      background-image: url('background.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-blend-mode: overlay;
+      background-color: rgba(255, 255, 255, 0); /* Reduced opacity for better image visibility */
+    }
+
+    .dark body {
+      background-image: url('background.jpeg');
+      background-color: rgba(0, 0, 0, 0);
+    }
+
+    .container > div {
+      background-color: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(5px);
+    }
+
+    .dark .container > div {
+      background-color: rgba(26, 32, 44, 0.9);
+    }
+
+    /* Keep all your existing styles */
+    .heatmap-cell { transition: all 0.3s ease; }
+    .selected-row { box-shadow: 0 0 0 2px #3b82f6; }
+    .control-btn { transition: all 0.2s ease; }
+    .control-btn:active { transform: scale(0.95); }
+    .prediction-cell { font-weight: bold; }
+
+    /* Dark mode styles */
+    .dark .bg-gray-50 { background-color: #1a202c; }
+    .dark .bg-white { background-color: #2d3748; }
+    .dark .text-gray-800 { color: #f7fafc; }
+    .dark .text-gray-700 { color: #e2e8f0; }
+    .dark .text-gray-600 { color: #cbd5e0; }
+    .dark .bg-gray-200 { background-color: #4a5568; }
+    .dark .bg-blue-50 { background-color: #2c5282; }
+    .dark .text-blue-700 { color: #ebf8ff; }
+    .dark .border-blue-500 { border-color: #63b3ed; }
+    .dark .bg-white { background-color: #2d3748; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div class="container mx-auto px-4 py-8 max-w-5xl"> <!-- Changed from max-w-6xl to max-w-5xl -->
+    <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+      <!-- Theme Toggle Switch -->
+      <div class="flex justify-end mb-4">
+        <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+          <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </button>
+      </div>
+      <div class="mb-8 bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
+        <div class="overflow-x-auto">
+            <h1 class="text-3xl font-bold text-center text-white-800 dark:text-white mb-2">EnviroShift</h1>
+        </div>
+      </div>
+
+
+      <!-- Key metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow text-center">
+          <div id="avg-quality" class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">0%</div>
+          <div class="text-gray-600 dark:text-gray-300">Current Air Quality</div>
+        </div>
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow text-center">
+          <div id="improvement" class="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">+0%</div>
+          <div class="text-gray-600 dark:text-gray-300">Improvement</div>
+        </div>
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow text-center">
+          <div id="total-users" class="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">0</div>
+          <div class="text-gray-600 dark:text-gray-300">Population Impacted</div>
+        </div>
+      </div>
+
+      <!-- Game controls -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Factors control panel -->
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-6 text-gray-700 dark:text-gray-200">Adjust Environmental Factors</h2>
+          <div class="space-y-6">
+            <!-- Trees Control -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-medium dark:text-gray-300">🌳 Trees Coverage</span>
+                <div class="flex items-center">
+                  <button class="control-btn bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2" onclick="adjustFactor('trees', -1)">-</button>
+                  <input type="number" id="trees-input" class="w-16 text-center border rounded py-1 dark:bg-gray-600 dark:text-white dark:border-gray-500" value="10" min="0" max="100">
+                  <button class="control-btn bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center ml-2" onclick="adjustFactor('trees', 1)">+</button>
+                </div>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                <div id="trees-bar" class="bg-green-500 h-4 rounded-full" style="width: 10%"></div>
+              </div>
+            </div>
+
+            <!-- Factories Control -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-medium dark:text-gray-300">🏭 Factory Count</span>
+                <div class="flex items-center">
+                  <button class="control-btn bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2" onclick="adjustFactor('factories', -1)">-</button>
+                  <input type="number" id="factories-input" class="w-16 text-center border rounded py-1 dark:bg-gray-600 dark:text-white dark:border-gray-500" value="5" min="0" max="10">
+                  <button class="control-btn bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center ml-2" onclick="adjustFactor('factories', 1)">+</button>
+                </div>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                <div id="factories-bar" class="bg-red-500 h-4 rounded-full" style="width: 50%"></div>
+              </div>
+            </div>
+
+            <!-- Traffic Control -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-medium dark:text-gray-300">🚗 Traffic Level</span>
+                <div class="flex items-center">
+                  <button class="control-btn bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2" onclick="adjustFactor('traffic', -1)">-</button>
+                  <select id="traffic-input" class="w-24 text-center border rounded py-1 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                  <button class="control-btn bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center ml-2" onclick="adjustFactor('traffic', 1)">+</button>
+                </div>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                <div id="traffic-bar" class="bg-orange-500 h-4 rounded-full" style="width: 60%"></div>
+              </div>
+            </div>
+
+            <!-- Clean Energy Control -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-medium dark:text-gray-300">⚡ Clean Energy</span>
+                <div class="flex items-center">
+                  <button class="control-btn bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2" onclick="adjustFactor('cleanEnergy', -5)">-</button>
+                  <input type="number" id="cleanEnergy-input" class="w-16 text-center border rounded py-1 dark:bg-gray-600 dark:text-white dark:border-gray-500" value="20" min="0" max="100">
+                  <button class="control-btn bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center ml-2" onclick="adjustFactor('cleanEnergy', 5)">+</button>
+                </div>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                <div id="cleanEnergy-bar" class="bg-blue-500 h-4 rounded-full" style="width: 20%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-between">
+            <button onclick="resetFactors()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 dark:text-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition">Reset</button>
+            <button onclick="applyChanges()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Apply Changes</button>
+          </div>
+        </div>
+
+        <!-- Results visualization -->
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-6 text-gray-700 dark:text-gray-200">Air Quality Results</h2>
+
+          <div class="flex items-center justify-center mb-8">
+            <div class="w-40 h-40 rounded-full border-8 border-blue-500 dark:border-blue-400 flex items-center justify-center bg-white dark:bg-gray-700">
+              <div class="text-center">
+                <div id="current-quality" class="text-4xl font-bold text-blue-600 dark:text-blue-400">0%</div>
+                <div id="quality-status" class="font-medium text-green-600 dark:text-green-400">Excellent</div>
+              </div>
+            </div>
+          </div>
+
+          <canvas id="qualityChart" height="250"></canvas>
+
+          <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+            <p id="feedback-message" class="text-sm text-blue-700 dark:text-blue-200">Adjust the factors to see how they affect air состоние!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prediction Heatmap -->
+      <div class="mb-8 bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">12-Month Air Quality Prediction</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th class="p-2 text-left font-bold text-gray-700 dark:text-gray-300">Month</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">Current</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+1</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+2</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+3</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+4</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+5</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+6</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+7</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+8</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+9</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+10</th>
+                <th class="p-2 text-center font-bold text-gray-700 dark:text-gray-300">+11</th>
+              </tr>
+            </thead>
+            <tbody id="prediction-body">
+              <!-- This will be filled by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="mt-8 bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+        <h3 class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Color Guide:</h3>
+        <div class="flex flex-wrap gap-2">
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-900 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">90%+ (Excellent)</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-700 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">80-90% (Very Good)</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-600 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">70-80% (Good)</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-500 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">60-70% (Fair)</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-400 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">50-60% (Moderate)</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-300 rounded mr-1"></div>
+            <span class="text-sm dark:text-gray-300">Below 50% (Poor)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIconDark = document.getElementById('theme-icon-dark');
+    const themeIconLight = document.getElementById('theme-icon-light');
+
+    // Check for saved theme preference or use system preference
+    const savedTheme = localStorage.getItem('theme') ||
+                      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    // Apply the saved theme
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      themeIconDark.classList.remove('hidden');
+      themeIconLight.classList.add('hidden');
+    } else {
+      document.documentElement.classList.remove('dark');
+      themeIconDark.classList.add('hidden');
+      themeIconLight.classList.remove('hidden');
+    }
+
+    // Toggle theme on button click
+    themeToggle.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        themeIconDark.classList.add('hidden');
+        themeIconLight.classList.remove('hidden');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        themeIconDark.classList.remove('hidden');
+        themeIconLight.classList.add('hidden');
+      }
+    });
+
+    // Game state
+    const gameState = {
+      currentQuality: 65.4,
+      initialQuality: 65.4,
+      factors: {
+        trees: 10,
+        factories: 5,
+        traffic: "Medium",
+        cleanEnergy: 20
+      },
+      history: [65.4, 68.2, 74.2, 79.5, 88.8, 100],
+      prediction: []
+    };
+
+    let qualityChart;
+
+    // Initialize game
+    function initGame() {
+      document.getElementById('trees-input').value = gameState.factors.trees;
+      document.getElementById('factories-input').value = gameState.factors.factories;
+      document.getElementById('traffic-input').value = gameState.factors.traffic;
+      document.getElementById('cleanEnergy-input').value = gameState.factors.cleanEnergy;
+
+      updateBars();
+      initChart();
+      calculatePrediction();
+      updateMetrics();
+    }
+
+    // Initialize chart
+    function initChart() {
+      const ctx = document.getElementById('qualityChart').getContext('2d');
+      qualityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['6 months ago', '5 months ago', '4 months ago', '3 months ago', '2 months ago', 'Last month', 'Current'],
+          datasets: [{
+            label: 'Air Quality %',
+            data: [...gameState.history, gameState.currentQuality],
+            borderColor: document.documentElement.classList.contains('dark') ? '#63b3ed' : '#3b82f6',
+            backgroundColor: document.documentElement.classList.contains('dark') ? 'rgba(99, 179, 237, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: document.documentElement.classList.contains('dark') ? '#2d3748' : '#ffffff',
+              bodyColor: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1a202c',
+              titleColor: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1a202c',
+              borderColor: document.documentElement.classList.contains('dark') ? '#4a5568' : '#e2e8f0',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 50,
+              max: 100,
+              ticks: {
+                callback: value => value + '%',
+                color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#4a5568'
+              },
+              grid: {
+                color: document.documentElement.classList.contains('dark') ? '#4a5568' : '#e2e8f0'
+              }
+            },
+            x: {
+              ticks: {
+                color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#4a5568'
+              },
+              grid: {
+                color: document.documentElement.classList.contains('dark') ? '#4a5568' : '#e2e8f0'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Calculate 13 months of predictions (Current + 12 future months)
+    function calculatePrediction() {
+      const prediction = [gameState.currentQuality];
+      let current = gameState.currentQuality;
+
+      for (let i = 1; i <= 12; i++) {
+        current = current * 0.99
+                 + gameState.factors.trees * 0.05
+                 + gameState.factors.cleanEnergy * 0.03
+                 - gameState.factors.factories * 0.5;
+
+        if (gameState.factors.traffic === 'High') current -= 0.8;
+        else if (gameState.factors.traffic === 'Low') current += 0.2;
+
+        current = Math.max(10, Math.min(current, 100));
+        prediction.push(current);
+      }
+
+      gameState.prediction = prediction;
+      renderPrediction();
+    }
+
+    // Render prediction table with ALL months including +12
+    function renderPrediction() {
+      const tbody = document.getElementById('prediction-body');
+      tbody.innerHTML = '';
+
+      const row = document.createElement('tr');
+
+      // Current month
+      addPredictionCell(row, gameState.prediction[0], true);
+
+      // Months +1 through +12
+      for (let i = 1; i <= 12; i++) {
+        addPredictionCell(row, gameState.prediction[i]);
+      }
+
+      tbody.appendChild(row);
+    }
+
+    function addPredictionCell(row, value, isCurrent = false) {
+      const cell = document.createElement('td');
+      cell.className = `p-2 text-center heatmap-cell prediction-cell ${getColor(value)}`;
+      cell.textContent = value.toFixed(1) + '%' + (isCurrent ? ' (Now)' : '');
+      row.appendChild(cell);
+    }
+
+    function getColor(value) {
+      if (value >= 90) return "bg-blue-900 text-white";
+      if (value >= 80) return "bg-blue-800 text-white";
+      if (value >= 70) return "bg-blue-700 text-white";
+      if (value >= 60) return "bg-blue-600 text-white";
+      if (value >= 50) return "bg-blue-500 text-white";
+      if (value >= 40) return "bg-blue-400 text-black dark:text-white";
+      if (value >= 30) return "bg-blue-300 text-black dark:text-white";
+      return "bg-blue-200 text-black dark:text-white";
+    }
+
+    // Update UI functions
+    function updateBars() {
+      document.getElementById('trees-bar').style.width = `${gameState.factors.trees}%`;
+      document.getElementById('factories-bar').style.width = `${gameState.factors.factories * 10}%`;
+
+      let trafficValue = 60; // Medium
+      if (gameState.factors.traffic === 'Low') trafficValue = 30;
+      else if (gameState.factors.traffic === 'High') trafficValue = 90;
+      document.getElementById('traffic-bar').style.width = `${trafficValue}%`;
+
+      document.getElementById('cleanEnergy-bar').style.width = `${gameState.factors.cleanEnergy}%`;
+    }
+
+    function updateMetrics() {
+      const status = getAirQualityStatus(gameState.currentQuality);
+
+      document.getElementById('current-quality').textContent = gameState.currentQuality.toFixed(1) + '%';
+      document.getElementById('quality-status').textContent = status.text;
+      document.getElementById('quality-status').className = `font-medium ${status.color}`;
+
+      document.getElementById('avg-quality').textContent = gameState.currentQuality.toFixed(1) + '%';
+
+      const improvement = ((gameState.currentQuality - gameState.initialQuality) / gameState.initialQuality * 100).toFixed(1);
+      document.getElementById('improvement').textContent = (improvement >= 0 ? '+' : '') + improvement + '%';
+      document.getElementById('improvement').className = `text-4xl font-bold mb-2 ${improvement >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+
+      document.getElementById('total-users').textContent = Math.round(3000 + (gameState.currentQuality - 50) * 20).toLocaleString();
+
+      updateFeedbackMessage();
+    }
+
+    function getAirQualityStatus(value) {
+      if (value >= 90) return { text: "Excellent", color: "text-green-600 dark:text-green-400" };
+      if (value >= 80) return { text: "Very Good", color: "text-green-500 dark:text-green-400" };
+      if (value >= 70) return { text: "Good", color: "text-green-400 dark:text-green-300" };
+      if (value >= 60) return { text: "Fair", color: "text-yellow-500 dark:text-yellow-400" };
+      if (value >= 50) return { text: "Moderate", color: "text-yellow-600 dark:text-yellow-500" };
+      if (value >= 40) return { text: "Poor", color: "text-orange-500 dark:text-orange-400" };
+      if (value >= 30) return { text: "Very Poor", color: "text-red-500 dark:text-red-400" };
+      return { text: "Hazardous", color: "text-red-600 dark:text-red-500" };
+    }
+
+    function updateFeedbackMessage() {
+      const el = document.getElementById('feedback-message');
+      const status = getAirQualityStatus(gameState.currentQuality);
+
+      if (gameState.currentQuality >= 90) {
+        el.textContent = "Amazing! Your city has excellent air quality. Keep up the good work!";
+        el.className = "text-sm text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900 p-3 rounded-lg";
+      } else if (gameState.currentQuality >= 80) {
+        el.textContent = "Great job! The air quality is very good, but there's still room for improvement.";
+        el.className = "text-sm text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-900 p-3 rounded-lg";
+      } else if (gameState.currentQuality >= 70) {
+        el.textContent = "Good progress! The air is cleaner but consider more trees or clean energy.";
+        el.className = "text-sm text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-900 p-3 rounded-lg";
+      } else if (gameState.currentQuality >= 60) {
+        el.textContent = "Fair air quality. Try reducing factories or traffic to improve further.";
+        el.className = "text-sm text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900 p-3 rounded-lg";
+      } else if (gameState.currentQuality >= 50) {
+        el.textContent = "Moderate air quality - health concerns for sensitive groups. Needs improvement.";
+        el.className = "text-sm text-orange-700 dark:text-orange-200 bg-orange-50 dark:bg-orange-900 p-3 rounded-lg";
+      } else {
+        el.textContent = "Warning! Poor air quality. Take immediate action to reduce pollution sources.";
+        el.className = "text-sm text-red-700 dark:text-red-200 bg-red-50 dark:bg-red-900 p-3 rounded-lg";
+      }
+    }
+
+    // Control functions
+    function adjustFactor(factor, change) {
+      const inputEl = document.getElementById(`${factor}-input`);
+      let newValue;
+
+      if (factor === 'traffic') {
+        const options = ['Low', 'Medium', 'High'];
+        const currentIndex = options.indexOf(gameState.factors.traffic);
+        let newIndex = currentIndex + change;
+        newIndex = Math.max(0, Math.min(newIndex, options.length - 1));
+        newValue = options[newIndex];
+      } else {
+        newValue = parseInt(inputEl.value) + change;
+        const min = parseInt(inputEl.min);
+        const max = parseInt(inputEl.max);
+        newValue = Math.max(min, Math.min(newValue, max));
+      }
+
+      inputEl.value = newValue;
+      gameState.factors[factor] = newValue;
+      updateBars();
+      calculateQuality();
+    }
+
+    function calculateQuality() {
+      let newQuality = 50;
+      newQuality += gameState.factors.trees * 0.5;
+      newQuality += gameState.factors.cleanEnergy * 0.4;
+      newQuality -= gameState.factors.factories * 3;
+
+      switch(gameState.factors.traffic) {
+        case 'Low': newQuality += 10; break;
+        case 'High': newQuality -= 15; break;
+      }
+
+      gameState.currentQuality = Math.max(10, Math.min(newQuality, 100));
+      calculatePrediction();
+      updateMetrics();
+      updateChart();
+    }
+
+    function applyChanges() {
+      gameState.factors.trees = parseInt(document.getElementById('trees-input').value);
+      gameState.factors.factories = parseInt(document.getElementById('factories-input').value);
+      gameState.factors.traffic = document.getElementById('traffic-input').value;
+      gameState.factors.cleanEnergy = parseInt(document.getElementById('cleanEnergy-input').value);
+
+      updateBars();
+      calculateQuality();
+    }
+
+    function resetFactors() {
+      gameState.factors = {
+        trees: 10,
+        factories: 5,
+        traffic: "Medium",
+        cleanEnergy: 20
+      };
+
+      document.getElementById('trees-input').value = gameState.factors.trees;
+      document.getElementById('factories-input').value = gameState.factors.factories;
+      document.getElementById('traffic-input').value = gameState.factors.traffic;
+      document.getElementById('cleanEnergy-input').value = gameState.factors.cleanEnergy;
+
+      updateBars();
+      calculateQuality();
+    }
+
+    function updateChart() {
+      qualityChart.data.datasets[0].data = [...gameState.history, gameState.currentQuality];
+      qualityChart.update();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', initGame);
+  </script>
+</body>
+</html>
