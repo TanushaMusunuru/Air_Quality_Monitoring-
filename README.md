@@ -1,32 +1,26 @@
 # 🌍 Air Quality Monitoring System — Business & Product Impact
 
-## 1. 🚨 Problem Statement
+## 1.  Problem Statement
 
 - Air pollution causes **over 7 million premature deaths annually** and leads to **economic losses exceeding $5 trillion**.
 - Most urban systems **lack real-time AQI forecasts** and **actionable insights**, limiting preventive interventions.
 
----
-
-## 2. 💡 Solution Overview
+## 2.  Solution Overview
 
 Developed a fully software-simulated IoT platform integrating:
 
-- 📡 **Live AQI API** with 100% real-time data via **MQTT**.
-- ☁️ **Firebase Cloud Storage**, ensuring 99.9% uptime and scalable access.
-- 📈 **Exponential Moving Average (EMA)** smoothing to reduce data noise by **up to 30%**.
-- 🤖 **ML-Based AQI Prediction Models**:
+-  **Live AQI API** with 100% real-time data via **MQTT**.
+-  **Firebase Cloud Storage**, ensuring 99.9% uptime and scalable access.
+-  **Exponential Moving Average (EMA)** smoothing to reduce data noise by **up to 30%**.
+-  **ML-Based AQI Prediction Models**:
   - **XGBoost**: 91.89% accuracy  
   - **Stacking Ensemble**: 91.69% accuracy
 
----
+## 3.  Key Innovation
 
-## 3. 🚗 Key Innovation
-
-- ✅ **A* Algorithm** for optimal route planning based on forecasted AQI.
+-  **A* Algorithm** for optimal route planning based on forecasted AQI.
   - Reduces exposure to high pollution areas by **up to 30%**
   - Boosts delivery efficiency by **10–15%**, lowering fuel costs and delays
-
----
 
 ## 4. 👥 Stakeholder Benefits
 
@@ -38,9 +32,7 @@ Developed a fully software-simulated IoT platform integrating:
 | **Urban Planners** | Enable **data-driven infrastructure** with long-term health benefits |
 | **Citizens** | Get real-time alerts & pollution-safe routes, reducing exposure by **up to 30%** |
 
----
-
-## 5. 📈 Business & Strategic Impact
+## 5. Business & Strategic Impact
 
 - Scalable across **hundreds of cities** with minimal infrastructure.
 - **Healthcare cost savings in billions** when deployed at national level.
@@ -48,14 +40,12 @@ Developed a fully software-simulated IoT platform integrating:
   - Government bodies
   - NGOs
   - Logistics and health organizations
-- 🔜 **Roadmap**:
+-  **Roadmap**:
   - Launching a consumer mobile app
   - Personalized pollution forecasts
   - Clean route navigation
 
----
-
-## 🎥 Demo Video 
+##  Demo Video 
 
  **Watch the real-time dashboard and ML-powered route planner in action:**
 
@@ -63,9 +53,7 @@ Developed a fully software-simulated IoT platform integrating:
 
 > *“This demo showcases our real-time AQI dashboard and ML-powered route planner in action — delivering instant, data-driven insights that empower smarter, safer, and more efficient decisions across sectors.”*
 
----
-
-## 📊 Technologies Used
+##  Technologies Used
 
 - **Frontend**: React.js, HTML/CSS
 - **Backend**: MQTT, Firebase
@@ -73,5 +61,5 @@ Developed a fully software-simulated IoT platform integrating:
 - **Algorithms**: Exponential Moving Average, A* Pathfinding
 - **Deployment**: Real-time API simulation
 
----
+
 
